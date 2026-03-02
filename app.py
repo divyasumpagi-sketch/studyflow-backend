@@ -1,22 +1,4 @@
-# ============================================================
-# app.py — StudyFlow API Backend
-# Deploy this on: Render.com
-# Frontend runs on: Netlify (static HTML/CSS/JS)
-# ============================================================
-# HOW TO RUN LOCALLY:
-#   pip install flask flask-cors
-#   python app.py
-#   API runs at: http://127.0.0.1:5000
-#
-# HOW TO DEPLOY ON RENDER:
-#   1. Push this file + requirements.txt to GitHub
-#   2. Create new Web Service on Render
-#   3. Build command:  pip install -r requirements.txt
-#   4. Start command:  python app.py
-#   5. Add Environment Variables on Render:
-#      NETLIFY_URL = https://your-site.netlify.app
-#      SECRET_KEY  = any-random-string
-# ============================================================
+
 
 from flask import Flask, request, redirect, jsonify, session
 from flask_cors import CORS
@@ -25,17 +7,11 @@ import os
 
 app = Flask(__name__)
 
-# ============================================================
-# CONFIGURATION
-# Set NETLIFY_URL in Render environment variables
-# ============================================================
+
 NETLIFY_URL = os.environ.get("NETLIFY_URL", "https://your-site.netlify.app")
 app.secret_key = os.environ.get("SECRET_KEY", "studyflow_secret_2024")
 
-# ============================================================
-# CORS — Allows your Netlify frontend to talk to this backend
-# Without CORS, browser will block all requests!
-# ============================================================
+
 CORS(app,
      supports_credentials=True,
      origins=[
@@ -48,10 +24,6 @@ CORS(app,
 
 DATABASE = "studyflow.db"
 
-
-# ============================================================
-# DATABASE FUNCTIONS
-# ============================================================
 
 def get_db():
     """Open a connection to the SQLite database."""
@@ -104,12 +76,6 @@ def init_db():
     print("Database is ready!")
 
 
-# ============================================================
-# HELPER FUNCTION
-# Redirects user back to a Netlify page with a message.
-# The message is passed in the URL as ?msg=...&type=success/error
-# Your HTML page reads this with JavaScript and shows the message.
-# ============================================================
 def redirect_to(page, msg="", msg_type="success"):
     url = f"{NETLIFY_URL}/{page}.html"
     if msg:
@@ -118,11 +84,6 @@ def redirect_to(page, msg="", msg_type="success"):
     return redirect(url, code=302)
 
 
-# ============================================================
-# ROUTE 1: Health Check
-# Visit your Render URL in browser to confirm API is live
-# Example: https://studyflow-api.onrender.com/
-# ============================================================
 @app.route("/")
 def home():
     return jsonify({
@@ -146,18 +107,7 @@ def home():
     })
 
 
-# ============================================================
-# ROUTE 2: REGISTER
-# HTML form on Netlify sends POST to this route
-#
-# Your register.html form should look like:
-#   <form method="POST" action="https://your-api.onrender.com/register">
-#     <input name="name" />
-#     <input name="email" />
-#     <input name="password" />
-#     <input name="confirm_password" />
-#   </form>
-# ============================================================
+
 @app.route("/register", methods=["POST"])
 def register():
     name     = request.form.get("name",             "").strip()
@@ -192,17 +142,7 @@ def register():
         return redirect_to("register", "Email already registered! Try logging in.", "error")
 
 
-# ============================================================
-# ROUTE 3: LOGIN
-# On success  → redirects to dashboard.html?user=Name&id=1
-# On failure  → redirects back to login.html with error msg
-#
-# Your login.html form:
-#   <form method="POST" action="https://your-api.onrender.com/login">
-#     <input name="email" />
-#     <input name="password" />
-#   </form>
-# ============================================================
+
 @app.route("/login", methods=["POST"])
 def login():
     email    = request.form.get("email",    "").strip()
@@ -232,29 +172,14 @@ def login():
         return redirect_to("login", "Invalid email or password!", "error")
 
 
-# ============================================================
-# ROUTE 4: LOGOUT
-# ============================================================
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect_to("login", "Logged out successfully.", "success")
 
 
-# ============================================================
-# ROUTE 5: DASHBOARD STATS (JSON API)
-# Your dashboard.html uses fetch() to call this
-#
-# JavaScript example in dashboard.html:
-#   const params = new URLSearchParams(window.location.search);
-#   const userId = params.get('id');
-#   fetch(`https://your-api.onrender.com/dashboard?user_id=${userId}`)
-#     .then(r => r.json())
-#     .then(data => {
-#       document.getElementById('studentCount').textContent = data.students;
-#       document.getElementById('taskCount').textContent    = data.tasks;
-#     });
-# ============================================================
+
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
     user_id = request.args.get("user_id")
@@ -274,19 +199,7 @@ def dashboard():
     })
 
 
-# ============================================================
-# ROUTE 6: GET ALL STUDENTS (JSON)
-# Your students.html calls this with fetch() to show the table
-#
-# JavaScript example in students.html:
-#   fetch('https://your-api.onrender.com/students')
-#     .then(r => r.json())
-#     .then(students => {
-#       students.forEach(s => {
-#         // build table rows dynamically
-#       });
-#     });
-# ============================================================
+
 @app.route("/students", methods=["GET"])
 def get_students():
     conn     = get_db()
@@ -295,18 +208,7 @@ def get_students():
     return jsonify([dict(s) for s in students])
 
 
-# ============================================================
-# ROUTE 7: ADD STUDENT
-# Your add_student.html form POSTs here
-#
-# HTML form:
-#   <form method="POST" action="https://your-api.onrender.com/add_student">
-#     <input name="name" />
-#     <input name="email" />
-#     <input name="course" />
-#     <input name="marks" type="number" />
-#   </form>
-# ============================================================
+
 @app.route("/add_student", methods=["POST"])
 def add_student():
     name   = request.form.get("name",   "").strip()
@@ -334,11 +236,7 @@ def add_student():
     return redirect_to("students", "Student added successfully!", "success")
 
 
-# ============================================================
-# ROUTE 8: EDIT STUDENT
-# GET  → returns student data as JSON (to pre-fill edit form)
-# POST → saves updated data
-# ============================================================
+
 @app.route("/edit_student/<int:id>", methods=["GET", "POST"])
 def edit_student(id):
     if request.method == "GET":
@@ -385,10 +283,7 @@ def delete_student(id):
     return redirect_to("students", "Student deleted!", "success")
 
 
-# ============================================================
-# ROUTE 10: GET ALL TASKS (JSON)
-# Pass ?user_id=1 to get tasks for a specific user
-# ============================================================
+
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
     user_id = request.args.get("user_id")
@@ -408,16 +303,7 @@ def get_tasks():
     return jsonify([dict(t) for t in tasks])
 
 
-# ============================================================
-# ROUTE 11: ADD TASK
-# HTML form:
-#   <form method="POST" action="https://your-api.onrender.com/add_task">
-#     <input name="title" />
-#     <input name="description" />
-#     <select name="status">...</select>
-#     <input name="user_id" type="hidden" value="1" />
-#   </form>
-# ============================================================
+
 @app.route("/add_task", methods=["POST"])
 def add_task():
     title       = request.form.get("title",       "").strip()
@@ -438,9 +324,6 @@ def add_task():
     return redirect_to("tasks", "Task added successfully!", "success")
 
 
-# ============================================================
-# ROUTE 12: EDIT TASK
-# ============================================================
 @app.route("/edit_task/<int:id>", methods=["GET", "POST"])
 def edit_task(id):
     if request.method == "GET":
@@ -467,10 +350,6 @@ def edit_task(id):
     conn.close()
     return redirect_to("tasks", "Task updated successfully!", "success")
 
-
-# ============================================================
-# ROUTE 13: DELETE TASK
-# ============================================================
 @app.route("/delete_task/<int:id>")
 def delete_task(id):
     conn = get_db()
@@ -480,21 +359,7 @@ def delete_task(id):
     return redirect_to("tasks", "Task deleted!", "success")
 
 
-# ============================================================
-# ROUTE 14: CALCULATOR (JSON API)
-# Frontend uses fetch() — no page reload needed
-#
-# JavaScript example in calculator.html:
-#   fetch('https://your-api.onrender.com/calculator', {
-#     method: 'POST',
-#     headers: { 'Content-Type': 'application/json' },
-#     body: JSON.stringify({ num1: 10, num2: 3, operation: 'add' })
-#   })
-#   .then(r => r.json())
-#   .then(data => {
-#     document.getElementById('result').textContent = data.expression;
-#   });
-# ============================================================
+
 @app.route("/calculator", methods=["POST"])
 def calculator():
     # Accept both JSON body and HTML form data
@@ -542,11 +407,7 @@ def calculator():
         "result":     display,
         "expression": f"{num1} {symbol} {num2} = {display}"
     })
-
-
-# ============================================================
-# START SERVER
-# ============================================================
+     
 if __name__ == "__main__":
     init_db()
     port = int(os.environ.get("PORT", 5000))
