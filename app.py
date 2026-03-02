@@ -1,5 +1,3 @@
-
-
 from flask import Flask, request, redirect, jsonify, session
 from flask_cors import CORS
 import sqlite3
@@ -7,16 +5,14 @@ import os
 
 app = Flask(__name__)
 
-
 NETLIFY_URL = os.environ.get("NETLIFY_URL", "https://your-site.netlify.app")
 app.secret_key = os.environ.get("SECRET_KEY", "studyflow_secret_2024")
-
 
 CORS(app,
      supports_credentials=True,
      origins=[
          NETLIFY_URL,
-         "http://127.0.0.1:5500",    # VS Code Live Server
+         "http://127.0.0.1:5500",
          "http://localhost:5500",
          "http://127.0.0.1:3000",
          "http://localhost:3000",
@@ -26,48 +22,43 @@ DATABASE = "studyflow.db"
 
 
 def get_db():
-    """Open a connection to the SQLite database."""
     conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row   # lets us use column names like dict
+    conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    """Create all tables when the server starts."""
     conn = get_db()
-    cur  = conn.cursor()
+    cur = conn.cursor()
 
-    # --- Users table ---
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            name       TEXT    NOT NULL,
-            email      TEXT    NOT NULL UNIQUE,
-            password   TEXT    NOT NULL,
-            created_at TEXT    DEFAULT (datetime('now'))
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
         )
     """)
 
-    # --- Students table ---
     cur.execute("""
         CREATE TABLE IF NOT EXISTS students (
-            id     INTEGER PRIMARY KEY AUTOINCREMENT,
-            name   TEXT    NOT NULL,
-            email  TEXT    NOT NULL,
-            course TEXT    NOT NULL,
-            marks  INTEGER NOT NULL
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            course TEXT NOT NULL,
+            marks INTEGER NOT NULL
         )
     """)
 
-    # --- Tasks table ---
     cur.execute("""
         CREATE TABLE IF NOT EXISTS tasks (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            title       TEXT    NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
             description TEXT,
-            status      TEXT    DEFAULT 'Pending',
-            user_id     INTEGER,
-            created_at  TEXT    DEFAULT (datetime('now'))
+            status TEXT DEFAULT 'Pending',
+            user_id INTEGER,
+            created_at TEXT DEFAULT (datetime('now'))
         )
     """)
 
@@ -76,6 +67,10 @@ def init_db():
     print("Database is ready!")
 
 
+# ⭐ IMPORTANT — initialize DB AFTER function definition
+with app.app_context():
+    init_db()
+     
 def redirect_to(page, msg="", msg_type="success"):
     url = f"{NETLIFY_URL}/{page}.html"
     if msg:
@@ -409,7 +404,6 @@ def calculator():
     })
      
 if __name__ == "__main__":
-    init_db()
     port = int(os.environ.get("PORT", 5000))
     print(f"StudyFlow API running on port {port}")
     print(f"Frontend URL: {NETLIFY_URL}")
